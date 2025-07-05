@@ -1,32 +1,8 @@
-import {
-  auth,
-  getSong,
-  type SpotifyCredentials,
-  type AuthClients,
-} from "tubeify";
 import fs from "fs";
 import ytdl from '@distube/ytdl-core';
 import ffmpeg from 'fluent-ffmpeg';
+import { timeStamp } from "console";
 
-async function convertSpotify(url: string): Promise<string | false> {
-  try {
-    const credentials: SpotifyCredentials = {
-      clientID: process.env.SPOTIFY_CLIENT_ID!,
-      clientSecret: process.env.SPOTIFY_SECRET!,
-    };
-    const token: AuthClients = await auth(credentials);
-    const request = url;
-    const response: string | null = await getSong(request, token);
-    if (response === null) {
-      throw new Error("Failed to get YouTube Link");
-    }
-
-    return response;
-  } catch (error) {
-    console.error(error);
-    return false;
-  }
-}
 
 async function downloadYT(url: string): Promise<{ filename: string; buffer: Buffer } | false> {
   try {
@@ -34,11 +10,8 @@ async function downloadYT(url: string): Promise<{ filename: string; buffer: Buff
       quality: 'highestaudio',
       filter: 'audioonly'
     });
-    
-    const tempFile = `temp_${Date.now()}.webm`; // Whatever YouTube gives us
-    const outputFile = `temp_${Date.now()}.mp3`; // What we want
-    
-    // Download raw audio
+    const tempFile = `temp_${Date.now()}.webm`; 
+    const outputFile = `temp_${Date.now()}.mp3`;
     await new Promise<void>((resolve, reject) => {
       stream
         .pipe(fs.createWriteStream(tempFile))
@@ -69,8 +42,6 @@ async function downloadYT(url: string): Promise<{ filename: string; buffer: Buff
 async function processAudio(inputBuffer: Buffer): Promise<Buffer> {
   const tempInput = `temp_input_${Date.now()}.mp3`;
   const tempOutput = `temp_output_${Date.now()}.mp3`;
-  
-  // Write buffer to temp file for ffmpeg
   fs.writeFileSync(tempInput, inputBuffer);
   
   return new Promise<Buffer>((resolve, reject) => {
@@ -83,6 +54,7 @@ async function processAudio(inputBuffer: Buffer): Promise<Buffer> {
       .on('end', () => {
         const processedBuffer = fs.readFileSync(tempOutput);
         fs.unlinkSync(tempInput);
+        fs.unlinkSync(tempOutput)
         resolve(processedBuffer);
       })
       .on('error', reject)
@@ -91,36 +63,15 @@ async function processAudio(inputBuffer: Buffer): Promise<Buffer> {
 }
 
 
-async function nightcoreify(url: string): Promise<any | false> {
+export default async function nightcoreify(url: string): Promise<Buffer | false> {
   try {
-    //wait... it's all YouTube?...
-    console.log(`Current URL: ${url}`)
-    if (!url.includes("youtube")) {
-        console.log("Spotify link detected... Converting to YT")
-      const convert = await convertSpotify(url);
-      if (convert !== false) {
-          url = convert;
-          console.log(`Spotify Link mutated to YT: ${url}`)
-      } else {
-        throw new Error("Unable to convert Spotify Link")
-      }
-    }
-    //...Always has been
-
     const file = await downloadYT(url)
-    if (!file) {
-        throw new Error("Unable to download YouTube link")
-    }
-
-    await processAudio(file.buffer)
-    
+    if (!file) throw new Error("Unable to download YouTube link")
+    const audioBuffer = await processAudio(file.buffer)
     fs.unlinkSync(file.filename);
-
-    return "kawaii";
+    return audioBuffer
   } catch (error) {
     console.error(error);
     return false;
   }
 }
-
-export default { nightcoreify };
