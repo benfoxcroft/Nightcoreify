@@ -122,4 +122,8 @@ try {
 
 ## License
 
-MIT
+ISC
+
+---
+
+**Note:** This library is for educational and personal use. Please respect YouTube's Terms of Service and copyright laws when using this tool.
