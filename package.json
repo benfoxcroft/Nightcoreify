@@ -1,0 +1,27 @@
+{
+  "name": "nightcoreify",
+  "version": "1.0.0",
+  "main": "dst/index.js",
+  "types": "dst/index.d.ts",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "prepublishOnly": "npm run build",
+    "start": "npm run build && node --env-file=.env dst/index.js"
+  },
+  "files": [
+    "dst/",
+    "README.md"
+  ],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "devDependencies": {
+    "@types/node": "^24.0.10",
+    "ts-node": "^10.9.2",
+    "tsx": "^4.20.3",
+    "typescript": "^5.8.3"
+  },
+  "dependencies": {
+    "tubeify": "^1.0.2"
+  }
+}
