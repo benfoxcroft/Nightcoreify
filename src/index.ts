@@ -1,8 +1,6 @@
 import fs from "fs";
 import ytdl from '@distube/ytdl-core';
 import ffmpeg from 'fluent-ffmpeg';
-import { timeStamp } from "console";
-
 
 async function downloadYT(url: string): Promise<{ filename: string; buffer: Buffer } | false> {
   try {
